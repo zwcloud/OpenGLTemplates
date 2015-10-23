@@ -3,7 +3,6 @@
 #include <GL/GL.h>
 #include <cstdio>
 #include <cassert>
-#include "Line.h"
 #pragma comment (lib, "glew32.lib")
 #pragma comment (lib, "opengl32.lib")
 
@@ -19,6 +18,7 @@ GLuint vShader = 0;
 GLuint pShader = 0;
 GLuint program = 0;
 GLint attributePos = 0;
+GLint attributeTexCoord = 0;
 GLint uniformViewport = 0;
 GLenum err = GL_NO_ERROR;
 
@@ -202,13 +202,15 @@ BOOL InitOpenGL()
 	//Vertex shader
 	const char* vShaderStr = R"(
 uniform vec2 Viewport;
-attribute vec4 vPosition;
+in vec4 vPosition;
+in vec2 vTexCoord;
 void main()
 {
 	gl_Position = vec4(
 					2.0*vPosition.x/Viewport.x - 1.0,
 					2.0*vPosition.y/Viewport.y - 1.0,
 					0.0, 1.0);
+	gl_TexCoord[0] = vec4(vTexCoord,0,1);
 }
 )";
 	vShader = glCreateShader(GL_VERTEX_SHADER);
@@ -228,7 +230,7 @@ void main()
 		{
 			char* infoLog = (char*)malloc(sizeof(char)*infoLength);
 			glGetShaderInfoLog(vShader, infoLength, nullptr, infoLog);
-			OutputDebugString(L"Error compiling shader: \n");
+			OutputDebugString(L"Error compiling vertex shader: \n");
 			OutputDebugStringA(infoLog);
 			OutputDebugStringA("\n");
 			free(infoLog);
@@ -241,7 +243,7 @@ void main()
 	const char* pShaderStr = R"(
 void main()
 {
-gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	gl_FragColor = vec4(gl_TexCoord[0].s, gl_TexCoord[0].t, gl_TexCoord[0].s*gl_TexCoord[0].t, 1.0);
 }
 )";
 	pShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -261,7 +263,7 @@ gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 		{
 			char* infoLog = (char*)malloc(sizeof(char)*infoLength);
 			glGetShaderInfoLog(pShader, infoLength, NULL, infoLog);
-			OutputDebugString(L"Error compiling shader: \n");
+			OutputDebugString(L"Error compiling fragment shader: \n");
 			OutputDebugStringA(infoLog);
 			OutputDebugStringA("\n");
 			free(infoLog);
@@ -282,6 +284,7 @@ gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 	glAttachShader(program, pShader);
 	glLinkProgram(program);
 	attributePos = glGetAttribLocation(program, "vPosition");//get location of attribute <vPosition>
+	attributeTexCoord = glGetAttribLocation(program, "vTexCoord");//get location of attribute <vTexCoord>
 	uniformViewport = glGetUniformLocation(program, "Viewport");//get location of uniform <Viewport>
 	glGetProgramiv(program, GL_LINK_STATUS, &linked);
 	if (!linked)
@@ -304,16 +307,12 @@ gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 
 	glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
 
-	//Create Line
-	Line line1;
-	line1.Set(10.0f, 10.f, 20.0f, 20.0f);
-
 	GLfloat vertex[] =
 	{
-		100.0f, 100.0f, 0.0f,
-		100.0f, 300.0f, 0.0f,
-		400.0f, 300.0f, 0.0f,
-		400.0f, 100.0f, 0.0f,
+		100.0f, 100.0f, 0.0f, 0,0,
+		100.0f, 300.0f, 0.0f, 0,1,
+		400.0f, 300.0f, 0.0f, 1,1,
+		400.0f, 100.0f, 0.0f, 1,0
 	};
 	glGenBuffers(1, &vertexBuf);
 	assert(vertexBuf != 0);
@@ -381,8 +380,10 @@ void Render(HWND hWnd)
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuf);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuf);
 
-	glVertexAttribPointer(attributePos, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(attributePos, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	glVertexAttribPointer(attributeTexCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(attributePos);
+	glEnableVertexAttribArray(attributeTexCoord);
 
 	//Draw two trangles
 	glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_SHORT, 0);

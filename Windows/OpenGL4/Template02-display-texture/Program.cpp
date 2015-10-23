@@ -3,9 +3,9 @@
 #include <GL/GL.h>
 #include <cstdio>
 #include <cassert>
-#include "Line.h"
 #pragma comment (lib, "glew32.lib")
 #pragma comment (lib, "opengl32.lib")
+#include "../../LodePNG/lodepng.h"
 
 //Global
 HDC hDC;
@@ -15,12 +15,18 @@ RECT clientRect;
 //OpenGL
 GLuint vertexBuf = 0;
 GLuint indexBuf = 0;
+GLuint texture = 0;
 GLuint vShader = 0;
 GLuint pShader = 0;
 GLuint program = 0;
 GLint attributePos = 0;
+GLint attributeTexCoord = 0;
 GLint uniformViewport = 0;
 GLenum err = GL_NO_ERROR;
+
+//image
+unsigned char* image;
+unsigned width, height;
 
 BOOL CreateOpenGLRenderContext(HWND hWnd);
 BOOL InitGLEW();
@@ -202,13 +208,15 @@ BOOL InitOpenGL()
 	//Vertex shader
 	const char* vShaderStr = R"(
 uniform vec2 Viewport;
-attribute vec4 vPosition;
+in vec4 vPosition;
+in vec2 vTexCoord;
 void main()
 {
 	gl_Position = vec4(
 					2.0*vPosition.x/Viewport.x - 1.0,
 					2.0*vPosition.y/Viewport.y - 1.0,
 					0.0, 1.0);
+	gl_TexCoord[0] = vec4(vTexCoord,0,1);
 }
 )";
 	vShader = glCreateShader(GL_VERTEX_SHADER);
@@ -228,7 +236,7 @@ void main()
 		{
 			char* infoLog = (char*)malloc(sizeof(char)*infoLength);
 			glGetShaderInfoLog(vShader, infoLength, nullptr, infoLog);
-			OutputDebugString(L"Error compiling shader: \n");
+			OutputDebugString(L"Error compiling vertex shader: \n");
 			OutputDebugStringA(infoLog);
 			OutputDebugStringA("\n");
 			free(infoLog);
@@ -239,9 +247,10 @@ void main()
 
 	//Fragment shader
 	const char* pShaderStr = R"(
+uniform sampler2D mysampler;
 void main()
 {
-gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
+	gl_FragColor = texture2D(mysampler,gl_TexCoord[0].st);
 }
 )";
 	pShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -261,7 +270,7 @@ gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 		{
 			char* infoLog = (char*)malloc(sizeof(char)*infoLength);
 			glGetShaderInfoLog(pShader, infoLength, NULL, infoLog);
-			OutputDebugString(L"Error compiling shader: \n");
+			OutputDebugString(L"Error compiling fragment shader: \n");
 			OutputDebugStringA(infoLog);
 			OutputDebugStringA("\n");
 			free(infoLog);
@@ -282,6 +291,7 @@ gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 	glAttachShader(program, pShader);
 	glLinkProgram(program);
 	attributePos = glGetAttribLocation(program, "vPosition");//get location of attribute <vPosition>
+	attributeTexCoord = glGetAttribLocation(program, "vTexCoord");//get location of attribute <vTexCoord>
 	uniformViewport = glGetUniformLocation(program, "Viewport");//get location of uniform <Viewport>
 	glGetProgramiv(program, GL_LINK_STATUS, &linked);
 	if (!linked)
@@ -301,31 +311,41 @@ gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0);
 		return FALSE;
 	}
 	glUseProgram(program);
-
-	glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
-
-	//Create Line
-	Line line1;
-	line1.Set(10.0f, 10.f, 20.0f, 20.0f);
-
+	
+	//vertex buffer
 	GLfloat vertex[] =
 	{
-		100.0f, 100.0f, 0.0f,
-		100.0f, 300.0f, 0.0f,
-		400.0f, 300.0f, 0.0f,
-		400.0f, 100.0f, 0.0f,
+		100.0f, 100.0f, 0.0f, 0,0,
+		100.0f, 300.0f, 0.0f, 0,1,
+		400.0f, 300.0f, 0.0f, 1,1,
+		400.0f, 100.0f, 0.0f, 1,0
 	};
 	glGenBuffers(1, &vertexBuf);
 	assert(vertexBuf != 0);
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuf);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(vertex), (GLvoid*)vertex, GL_STATIC_DRAW);
 
+	//index buffer
 	GLushort index[] = { 0, 1, 2, 2, 3, 0 };
 	glGenBuffers(1, &indexBuf);
 	assert(indexBuf != 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuf);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index), (GLvoid*)index, GL_STATIC_DRAW);
 
+	//texture
+	unsigned error;
+
+	error = lodepng_decode32_file(&image, &width, &height, "1.png");
+	if (error) printf("error %u: %s\n", error, lodepng_error_text(error));
+
+
+	glGenTextures(1, &texture);
+	glBindTexture(GL_TEXTURE_2D, texture); glEnable(GL_TEXTURE_2D);
+	glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+	free(image);
+
+	//other settings
+	glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CW);
 	glCullFace(GL_BACK);
@@ -381,8 +401,10 @@ void Render(HWND hWnd)
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuf);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuf);
 
-	glVertexAttribPointer(attributePos, 3, GL_FLOAT, GL_FALSE, 0, 0);
+	glVertexAttribPointer(attributePos, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	glVertexAttribPointer(attributeTexCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(attributePos);
+	glEnableVertexAttribArray(attributeTexCoord);
 
 	//Draw two trangles
 	glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_SHORT, 0);

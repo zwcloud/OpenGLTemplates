@@ -201,7 +201,7 @@ BOOL InitOpenGL()
 	//Vertex shader
 	const char* vShaderStr = R"(
 uniform vec2 Viewport;
-attribute vec4 vPosition;
+in vec4 vPosition;
 void main()
 {
 	gl_Position = vec4(

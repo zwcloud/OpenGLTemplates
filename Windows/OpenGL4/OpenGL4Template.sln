@@ -3,24 +3,36 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
 VisualStudioVersion = 12.0.31101.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "OpenGL4Template", "OpenGL4Template\OpenGL4Template.vcxproj", "{4B5B8C54-9BFC-4627-8193-8427112050BA}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "LineRenderTemplate", "LineRenderTemplate\LineRenderTemplate.vcxproj", "{6249F354-0494-41FD-BFA7-632A02B16184}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Template00-basic", "Template00-basic\Template00-basic.vcxproj", "{4B5B8C54-9BFC-4627-8193-8427112050BA}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Template01-pass-texcoord", "Template01-pass-texcoord\Template01-pass-texcoord.vcxproj", "{F30DE090-0DE2-43A0-A432-AD6248F29DBD}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Template02-display-texture", "Template02-display-texture\Template02-display-texture.vcxproj", "{2B817036-2A90-440A-9E26-6E6E9200518A}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|x64 = Debug|x64
-		Release|x64 = Release|x64
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4B5B8C54-9BFC-4627-8193-8427112050BA}.Debug|x64.ActiveCfg = Debug|x64
-		{4B5B8C54-9BFC-4627-8193-8427112050BA}.Debug|x64.Build.0 = Debug|x64
-		{4B5B8C54-9BFC-4627-8193-8427112050BA}.Release|x64.ActiveCfg = Release|x64
-		{4B5B8C54-9BFC-4627-8193-8427112050BA}.Release|x64.Build.0 = Release|x64
-		{6249F354-0494-41FD-BFA7-632A02B16184}.Debug|x64.ActiveCfg = Debug|x64
-		{6249F354-0494-41FD-BFA7-632A02B16184}.Debug|x64.Build.0 = Debug|x64
-		{6249F354-0494-41FD-BFA7-632A02B16184}.Release|x64.ActiveCfg = Release|x64
-		{6249F354-0494-41FD-BFA7-632A02B16184}.Release|x64.Build.0 = Release|x64
+		{6249F354-0494-41FD-BFA7-632A02B16184}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6249F354-0494-41FD-BFA7-632A02B16184}.Debug|Win32.Build.0 = Debug|Win32
+		{6249F354-0494-41FD-BFA7-632A02B16184}.Release|Win32.ActiveCfg = Release|Win32
+		{6249F354-0494-41FD-BFA7-632A02B16184}.Release|Win32.Build.0 = Release|Win32
+		{4B5B8C54-9BFC-4627-8193-8427112050BA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{4B5B8C54-9BFC-4627-8193-8427112050BA}.Debug|Win32.Build.0 = Debug|Win32
+		{4B5B8C54-9BFC-4627-8193-8427112050BA}.Release|Win32.ActiveCfg = Release|Win32
+		{4B5B8C54-9BFC-4627-8193-8427112050BA}.Release|Win32.Build.0 = Release|Win32
+		{F30DE090-0DE2-43A0-A432-AD6248F29DBD}.Debug|Win32.ActiveCfg = Debug|Win32
+		{F30DE090-0DE2-43A0-A432-AD6248F29DBD}.Debug|Win32.Build.0 = Debug|Win32
+		{F30DE090-0DE2-43A0-A432-AD6248F29DBD}.Release|Win32.ActiveCfg = Release|Win32
+		{F30DE090-0DE2-43A0-A432-AD6248F29DBD}.Release|Win32.Build.0 = Release|Win32
+		{2B817036-2A90-440A-9E26-6E6E9200518A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{2B817036-2A90-440A-9E26-6E6E9200518A}.Debug|Win32.Build.0 = Debug|Win32
+		{2B817036-2A90-440A-9E26-6E6E9200518A}.Release|Win32.ActiveCfg = Release|Win32
+		{2B817036-2A90-440A-9E26-6E6E9200518A}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
