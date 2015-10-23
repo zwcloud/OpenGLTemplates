@@ -47,11 +47,11 @@ int __stdcall WinMain(__in HINSTANCE hInstance, __in_opt HINSTANCE hPrevInstance
 	wc.lpfnWndProc = WndProc;
 	wc.hInstance = hInstance;
 	wc.hbrBackground = (HBRUSH)(COLOR_BACKGROUND);
-	wc.lpszClassName = L"Opengl4TemplateWindowClass";
+	wc.lpszClassName = L"Opengl330TemplateWindowClass";
 	wc.style = CS_OWNDC;
 	if (!RegisterClass(&wc))
 		return 1;
-	HWND hWnd = CreateWindowW(wc.lpszClassName, L"Opengl 4 Template", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 640, 480, 0, 0, hInstance, 0);
+	HWND hWnd = CreateWindowW(wc.lpszClassName, L"Opengl 3.3 Template", WS_OVERLAPPEDWINDOW | WS_VISIBLE, 0, 0, 640, 480, 0, 0, hInstance, 0);
 
 	ShowWindow(hWnd, nShowCmd);
 	UpdateWindow(hWnd);
@@ -127,13 +127,13 @@ BOOL CreateOpenGLRenderContext(HWND hWnd)
 		PFD_SUPPORT_OPENGL |   // support OpenGL  
 		PFD_DOUBLEBUFFER,      // double buffered  
 		PFD_TYPE_RGBA,         // RGBA type  
-		32,                    // 24-bit color depth  
+		32,                    // 32-bit color depth  
 		0, 0, 0, 0, 0, 0,      // color bits ignored  
 		0,                     // no alpha buffer  
 		0,                     // shift bit ignored  
 		0,                     // no accumulation buffer  
 		0, 0, 0, 0,            // accum bits ignored  
-		24,                    // 32-bit z-buffer      
+		24,                    // 24-bit z-buffer      
 		8,                     // no stencil buffer  
 		0,                     // no auxiliary buffer  
 		PFD_MAIN_PLANE,        // main layer  
@@ -157,7 +157,7 @@ BOOL CreateOpenGLRenderContext(HWND hWnd)
 		return FALSE;
 	}
 	bResult = SetPixelFormat(hDC, pixelFormatIndex, &pfd);
-	if (pixelFormatIndex == FALSE)
+	if (bResult == FALSE)
 	{
 		OutputDebugStringA("SetPixelFormat Failed!\n");
 		return FALSE;
@@ -207,17 +207,18 @@ BOOL InitOpenGL()
 	GLint compiled;
 	//Vertex shader
 	const char* vShaderStr = R"(
-#version 130
+#version 330 core
 uniform vec2 Viewport;
 in vec4 vPosition;
 in vec2 vTexCoord;
+out vec2 out_TexCoord;
 void main()
 {
 	gl_Position = vec4(
 					2.0*vPosition.x/Viewport.x - 1.0,
 					2.0*vPosition.y/Viewport.y - 1.0,
 					0.0, 1.0);
-	gl_TexCoord[0] = vec4(vTexCoord,0,1);
+	out_TexCoord = vTexCoord;
 }
 )";
 	vShader = glCreateShader(GL_VERTEX_SHADER);
@@ -248,12 +249,14 @@ void main()
 
 	//Fragment shader
 	const char* pShaderStr = R"(
-#version 130
+#version 330 core
 uniform sampler2D mysampler;
+in vec2 out_TexCoord;
+out vec4 out_Color;
 void main()
 {
-	vec2 st = gl_TexCoord[0].st;
-	gl_FragColor = texture2D(mysampler,vec2(st.s, 1- st.t));
+	vec2 st = out_TexCoord.st;
+	out_Color = texture2D(mysampler,vec2(st.s, 1- st.t));
 }
 )";
 	pShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -293,9 +296,6 @@ void main()
 	glAttachShader(program, vShader);
 	glAttachShader(program, pShader);
 	glLinkProgram(program);
-	attributePos = glGetAttribLocation(program, "vPosition");//get location of attribute <vPosition>
-	attributeTexCoord = glGetAttribLocation(program, "vTexCoord");//get location of attribute <vTexCoord>
-	uniformViewport = glGetUniformLocation(program, "Viewport");//get location of uniform <Viewport>
 	glGetProgramiv(program, GL_LINK_STATUS, &linked);
 	if (!linked)
 	{
@@ -314,6 +314,11 @@ void main()
 		return FALSE;
 	}
 	glUseProgram(program);
+
+	//get attribute and uniform location by name
+	attributePos = glGetAttribLocation(program, "vPosition");//get location of attribute <vPosition>
+	attributeTexCoord = glGetAttribLocation(program, "vTexCoord");//get location of attribute <vTexCoord>
+	uniformViewport = glGetUniformLocation(program, "Viewport");//get location of uniform <Viewport>
 	
 	//vertex buffer
 	GLfloat vertex[] =
@@ -335,6 +340,13 @@ void main()
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuf);
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(index), (GLvoid*)index, GL_STATIC_DRAW);
 
+	//set attribute of positon and texcoord
+	glVertexAttribPointer(attributePos, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
+	glVertexAttribPointer(attributeTexCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	//enable attribute array
+	glEnableVertexAttribArray(attributePos);
+	glEnableVertexAttribArray(attributeTexCoord);
+
 	//texture
 	unsigned error;
 
@@ -354,6 +366,7 @@ void main()
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 	free(image);
 
+	//sampler settings
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -414,11 +427,6 @@ void Render(HWND hWnd)
 	// Bind the VBO
 	glBindBuffer(GL_ARRAY_BUFFER, vertexBuf);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indexBuf);
-
-	glVertexAttribPointer(attributePos, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), 0);
-	glVertexAttribPointer(attributeTexCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(attributePos);
-	glEnableVertexAttribArray(attributeTexCoord);
 
 	glBindTexture(GL_TEXTURE_2D, texture);
 
