@@ -207,6 +207,7 @@ BOOL InitOpenGL()
 	GLint compiled;
 	//Vertex shader
 	const char* vShaderStr = R"(
+#version 130
 uniform vec2 Viewport;
 in vec4 vPosition;
 in vec2 vTexCoord;
@@ -247,10 +248,12 @@ void main()
 
 	//Fragment shader
 	const char* pShaderStr = R"(
+#version 130
 uniform sampler2D mysampler;
 void main()
 {
-	gl_FragColor = texture2D(mysampler,gl_TexCoord[0].st);
+	vec2 st = gl_TexCoord[0].st;
+	gl_FragColor = texture2D(mysampler,vec2(st.s, 1- st.t));
 }
 )";
 	pShader = glCreateShader(GL_FRAGMENT_SHADER);
@@ -335,17 +338,29 @@ void main()
 	//texture
 	unsigned error;
 
-	error = lodepng_decode32_file(&image, &width, &height, "1.png");
-	if (error) printf("error %u: %s\n", error, lodepng_error_text(error));
+	error = lodepng_decode32_file(&image, &width, &height, "CheckerMap.png");
+	if (error)
+	{
+		char buf[128];
+		sprintf(buf, "error %u: %s\n", error, lodepng_error_text(error));
+		OutputDebugStringA(buf);
+	}
 
+	glActiveTexture(GL_TEXTURE0);
+	glEnable(GL_TEXTURE_2D);
 
 	glGenTextures(1, &texture);
-	glBindTexture(GL_TEXTURE_2D, texture); glEnable(GL_TEXTURE_2D);
-	glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
+	glBindTexture(GL_TEXTURE_2D, texture);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, image);
 	free(image);
 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
 	//other settings
-	glClearColor(0.8f, 0.8f, 0.8f, 1.0f);
+	glClearColor(0.0f, 0.0f, 0.9f, 1.0f);
 	glEnable(GL_CULL_FACE);
 	glFrontFace(GL_CW);
 	glCullFace(GL_BACK);
@@ -388,7 +403,6 @@ BOOL Update(HWND hWnd)
 
 void Render(HWND hWnd)
 {
-	glClear(GL_COLOR_BUFFER_BIT);
 	_CheckGLError_
 
 	//Clear
@@ -405,6 +419,8 @@ void Render(HWND hWnd)
 	glVertexAttribPointer(attributeTexCoord, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(attributePos);
 	glEnableVertexAttribArray(attributeTexCoord);
+
+	glBindTexture(GL_TEXTURE_2D, texture);
 
 	//Draw two trangles
 	glDrawElements(GL_TRIANGLES, 2 * 3, GL_UNSIGNED_SHORT, 0);
