@@ -209,16 +209,16 @@ BOOL InitOpenGL()
 	const char* vShaderStr = R"(
 #version 330 core
 uniform vec2 Viewport;
-in vec4 vPosition;
-in vec2 vTexCoord;
-out vec2 out_TexCoord;
+in vec4 in_Position;
+in vec2 in_TexCoord;
+out vec2 TexCoord;
 void main()
 {
 	gl_Position = vec4(
-					2.0*vPosition.x/Viewport.x - 1.0,
-					2.0*vPosition.y/Viewport.y - 1.0,
+					2.0*in_Position.x/Viewport.x - 1.0,
+					2.0*in_Position.y/Viewport.y - 1.0,
 					0.0, 1.0);
-	out_TexCoord = vTexCoord;
+	TexCoord = in_TexCoord;
 }
 )";
 	vShader = glCreateShader(GL_VERTEX_SHADER);
@@ -251,11 +251,11 @@ void main()
 	const char* pShaderStr = R"(
 #version 330 core
 uniform sampler2D mysampler;
-in vec2 out_TexCoord;
+in vec2 TexCoord;
 out vec4 out_Color;
 void main()
 {
-	vec2 st = out_TexCoord.st;
+	vec2 st = TexCoord.st;
 	out_Color = texture2D(mysampler,vec2(st.s, 1- st.t));
 }
 )";
@@ -316,8 +316,8 @@ void main()
 	glUseProgram(program);
 
 	//get attribute and uniform location by name
-	attributePos = glGetAttribLocation(program, "vPosition");//get location of attribute <vPosition>
-	attributeTexCoord = glGetAttribLocation(program, "vTexCoord");//get location of attribute <vTexCoord>
+	attributePos = glGetAttribLocation(program, "in_Position");//get location of attribute <in_Position>
+	attributeTexCoord = glGetAttribLocation(program, "in_TexCoord");//get location of attribute <in_TexCoord>
 	uniformViewport = glGetUniformLocation(program, "Viewport");//get location of uniform <Viewport>
 	
 	//vertex buffer
