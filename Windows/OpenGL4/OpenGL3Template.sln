@@ -11,6 +11,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Template01-pass-texcoord", 
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Template02-display-texture", "Template02-display-texture\Template02-display-texture.vcxproj", "{2B817036-2A90-440A-9E26-6E6E9200518A}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Template03-display-texture", "Template03-display-texture\Template03-display-texture.vcxproj", "{FE8F6FE0-BEEA-458B-A3CF-07BEE9E0CB47}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -33,6 +35,10 @@ Global
 		{2B817036-2A90-440A-9E26-6E6E9200518A}.Debug|Win32.Build.0 = Debug|Win32
 		{2B817036-2A90-440A-9E26-6E6E9200518A}.Release|Win32.ActiveCfg = Release|Win32
 		{2B817036-2A90-440A-9E26-6E6E9200518A}.Release|Win32.Build.0 = Release|Win32
+		{FE8F6FE0-BEEA-458B-A3CF-07BEE9E0CB47}.Debug|Win32.ActiveCfg = Debug|Win32
+		{FE8F6FE0-BEEA-458B-A3CF-07BEE9E0CB47}.Debug|Win32.Build.0 = Debug|Win32
+		{FE8F6FE0-BEEA-458B-A3CF-07BEE9E0CB47}.Release|Win32.ActiveCfg = Release|Win32
+		{FE8F6FE0-BEEA-458B-A3CF-07BEE9E0CB47}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
